@@ -2,9 +2,9 @@
 
 ## 代码提交
 
-1. 从master创建分支
+1. 从develop创建分支
 2. 在分支上开发
-3. 提交merge request到master分支
+3. 提交merge request到develop分支
 
 
 
@@ -19,4 +19,3 @@ or vscode or 任何顺手的
 ## 代码风格
 
 建议遵循 [PEP8](https://www.python.org/dev/peps/pep-0008/)
-
