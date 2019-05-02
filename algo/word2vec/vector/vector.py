@@ -35,6 +35,11 @@ class Vector:
             # self.get_similar_words(words + result_words, threshold, depth - 1)
             self.get_similar_words(word, threshold, depth - 1)
 
+    def save_similar_words(self):
+        with open("similar_words.txt", 'w') as fw:
+            for word in self.similar_words:
+                fw.write(word[0] + '\n')
+
 
 def get_stopwords():
     global STOPWORDS
@@ -51,9 +56,10 @@ get_stopwords()
 
 vector = Vector()
 vector.load("vector")
-vector.get_similar_words(["说", "表示", "声明"], 0, 3)
+vector.get_similar_words(["说", "称", "表示", "声明"], 0, 5)
 print(vector.similar_words)
 print(len(vector.similar_words))
+vector.save_similar_words()
 # print(vector.model.wv.most_similar(["说", "认为","陈述"]))
 # print(vector.model.wv.similarity("说", "吗"))
 

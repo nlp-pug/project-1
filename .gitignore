@@ -66,3 +66,14 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 .DS_Store
+.idea
+algo/parse_sentence_start/similar_words.txt
+alog/parse_sentence_start/stanford-corenlp-full-2018-10-05/
+algo/word2vec/data/
+algo/word2vec/database/__pycache__/
+algo/word2vec/database/config.py
+algo/word2vec/vector/similar_words.txt
+algo/word2vec/vector/vector
+algo/word2vec/vector/vector.trainables.syn1neg.npy
+algo/word2vec/vector/vector.wv.vectors.npy
+algo/"word2vec/vector/\347\231\276\345\272\246\345\201\234\347\224\250\350\257\215\350\241\250.txt"
