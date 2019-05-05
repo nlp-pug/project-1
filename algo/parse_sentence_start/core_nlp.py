@@ -56,6 +56,14 @@ class NewsParser:
     def __init__(self):
         self.nlp = StanfordNLP()
         self.words = []
+        self.text = None
+        self.tokens = None
+        self.dependency_parse = None
+        self.parse = None
+        self.pos = None
+        self.ner = None
+        self.dep_parse_dict = {}
+
         with open("similar_words.txt", 'r') as f:
             content = f.read().split("\n")
             for word in content:
@@ -68,41 +76,99 @@ class NewsParser:
         self.dependency_parse = self.nlp.dependency_parse(text)
         self.parse = self.nlp.parse(text)
         self.pos = self.nlp.pos(text)
+        self.ner = self.nlp.ner(text)
 
         print(self.tokens)
         print(self.dependency_parse)
         print(self.parse)
         print(self.pos)
+        print(self.ner)
 
         for token in self.tokens:
             # it indicate finding a word similar to "说"
             if token in self.words:
                 print("found token {} in words".format(token))
-                print(self.get_nsubj(token))
-                self.read_parse_tree(token)
+                speaker_index = self.get_ner(token)
+                print("------------ {}".format(self.get_full_speaker(speaker_index)))
+                self.get_sentence_start(token)
+                self.clean()
                 return
 
+    # get nominal subject
+    def get_ner(self, token):
+        FILTER_NER = ['ORGANIZATION', 'COUNTRY', 'PERSON', 'NN']
+        # create dependency parse dict for search
+        for dep in self.dependency_parse:
+            if str(dep[1]) in self.dep_parse_dict.keys():
+                self.dep_parse_dict[str(dep[1])].append(dep)
+            else:
+                self.dep_parse_dict[str(dep[1])] = [dep]
 
-    def get_nsubj(self, token):
+        print(self.dep_parse_dict)
+
         index = self.tokens.index(token) + 1
 
-        for dep in self.dependency_parse:
-            if dep[0] == 'nsubj' and dep[1] == index:
-                return self.tokens[dep[2] - 1]
+        path = [str(index)]
 
-    def read_parse_tree(self, token):
+        seen = []
+
+        while len(path):
+            node = path.pop(0)
+
+            if node in seen or node not in self.dep_parse_dict:
+                continue
+
+            for dep in self.dep_parse_dict[node]:
+                if dep[0] == 'nsubj' or self.ner[dep[2] - 1][1] in FILTER_NER:
+                    return dep[2]
+                else:
+                    path.append(str(dep[2]))
+
+            seen.append(node)
+
+        # not found
+        return -1
+
+    def get_full_speaker(self, index):
+        speaker = ''
+
+        # index is a leave
+        if str(index) not in self.dep_parse_dict.keys():
+            return self.tokens[index - 1]
+
+        for dep in self.dep_parse_dict[str(index)]:
+            speaker += self.tokens[dep[2] - 1]
+
+        speaker += self.tokens[index - 1]
+        return speaker
+
+    # I try to get token's sub-tree
+    def get_sentence_start(self, token):
+        # ptree = Tree.fromstring(self.parse)
+        # # ptree.draw()
+        # ptree.pretty_print()
+
+
+
         ptree = ParentedTree.fromstring(self.parse)
         ptree.pretty_print()
+        # ptree.draw()
         token_location = ptree.leaf_treeposition(self.tokens.index(token))
         print(token_location)
 
-        # print(ptree[token_location[:-5]])
-
-        # for leave in ptree[0, 3, 2]:
-        #     print(leave.label())
         sub = Tree('X', ptree[token_location[:-2]])
         print(sub.leaves())
+        print(sub.label())
         return sub.leaves()
+
+    def clean(self):
+        self.text = None
+        self.tokens = None
+        self.dependency_parse = None
+        self.parse = None
+        self.pos = None
+        self.ner = None
+        self.dep_parse_dict = {}
 
 
 
