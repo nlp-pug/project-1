@@ -2,7 +2,7 @@ from gensim import models
 from gensim.models import Word2Vec
 import os
 
-tokens_path = os.getcwd() + '/../data/tokens/'
+tokens_path = os.getcwd() + '/../data/sentences/'
 
 STOPWORDS = []
 
@@ -13,10 +13,11 @@ class Vector:
 
     def generator(self, path):
         sentences = models.word2vec.PathLineSentences(path)
-        self.model = Word2Vec(sentences, min_count=50)
+        self.model = Word2Vec(sentences, min_count=30)
 
     def load(self, path):
-        self.model = Word2Vec.load("vector")
+        # self.model = Word2Vec.load("vector")
+        self.model = Word2Vec.load(path)
 
     def save(self):
         self.model.save("vector")
@@ -52,16 +53,17 @@ def get_stopwords():
 # vector.save()
 # print(vector.model.wv.most_similar("说"))
 
-get_stopwords()
-
-vector = Vector()
-vector.load("vector")
-vector.get_similar_words(["说", "称", "表示", "声明"], 0, 5)
-print(vector.similar_words)
-print(len(vector.similar_words))
-vector.save_similar_words()
-# print(vector.model.wv.most_similar(["说", "认为","陈述"]))
-# print(vector.model.wv.similarity("说", "吗"))
+# get_stopwords()
+#
+# vector = Vector()
+# vector.load(os.getcwd() + '/vector')
+# # vector.get_similar_words(["说", "称", "表示", "声明"], 0, 5)
+# # print(vector.similar_words)
+# # print(len(vector.similar_words))
+# # vector.save_similar_words()
+# # print(vector.model.wv.most_similar(["说", "认为","陈述"]))
+# # print(vector.model.wv.similarity("说", "吗"))
+# print(vector.model.wv["说"])
 
 
 

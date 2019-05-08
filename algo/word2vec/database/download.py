@@ -34,15 +34,25 @@ def remove_extra_char(string):
 
 
 def cut_to_words(contents):
-    text = [remove_extra_char(t) for t in contents]
-    text = ''.join(t for t in text)
-    words = list(jieba.cut(text))
-    tokens = [t for t in words if t.strip() and t != 'n']
+
+    text = []
+    for content in contents:
+        for con in content:
+            text += [c for c in re.split("。|？|！", con) if c != '']
+
+    pattern = re.compile('[\w|\d]+')
+    text = [''.join(pattern.findall(t)) for t in text]
+
+    jieba.enable_parallel(3)
+    words = [list(jieba.cut(t)) for t in text]
 
     with open("database_news.txt", 'w') as fw:
-        for t in tokens:
-            fw.write(t)
-            fw.write(' ')
+        for word in words:
+            if len(word) <= 0:
+                continue
+            for w in word:
+                fw.write(w + ' ')
+            fw.write('\n')
 
 
 downlaod()

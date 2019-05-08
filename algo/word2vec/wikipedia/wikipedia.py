@@ -8,8 +8,9 @@ import time
 SOURCE_PATH = os.getcwd()
 database = '/../data/text/'
 database_path = SOURCE_PATH + database
-words_path = SOURCE_PATH + '/../data/words/'
+words_path = SOURCE_PATH + '/../data/sentences/'
 MAX_PROCESS = 3
+
 
 def get_wikipedia_dir(path):
     return [dir for dir in os.listdir(path) if dir != '.DS_Store']
@@ -31,8 +32,10 @@ def read_wikipedia_rawdata(id, dir):
                 t2 = time.time()
                 print("process {} consume time {}".format(id, (t2 - t1)))
                 with open(words_path + f, 'w') as fw:
-                    for w in words:
-                        fw.write(w + ' ')
+                    for word in words:
+                        for w in word:
+                            fw.write(w + ' ')
+                        fw.write('\n')
 
 
 def to_chunks(pat):
@@ -50,19 +53,32 @@ def handle_rawdata(rawdata):
     raw = []
 
     # remove <doc> header and '\n'
-    raw = [data for data in rawdata.split("\n") if data and re.match('(<doc)|(<\/doc>)', data) == None]
+    text = [data for data in rawdata.split("\n") if data and re.match('(<doc)|(<\/doc>)', data) == None]
+
+    # print(text[:50])
+    raw_data = []
+    for r in text:
+        # remove title
+        # if "。" not in r and "？" not in r and "！" not in r:
+        #     continue
+        raw_data += [w for w in re.split("。|？|！", r) if w != '']
+
+
+    # print(raw_data)
 
     # remove symbol like ','
     pattern = re.compile('[\w|\d]+')
-    raw = [pattern.findall(r) for r in raw]
+    raw_data = [''.join(pattern.findall(r)) for r in raw_data]
 
-    raw = to_chunks(raw)
+    # raw = to_chunks(raw)
+    # print(raw_data)
 
     # print(raw[:100])
     # jieba too slow
-    words = [list(jieba.cut(r)) for r in raw]
+    words = [list(jieba.cut(r)) for r in raw_data]
     # print(words[:20])
-    return to_chunks(words)
+
+    return words
 
 
 def cut(string):
