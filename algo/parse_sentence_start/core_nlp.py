@@ -10,6 +10,7 @@ from collections import defaultdict
 import logging
 import json
 import math
+import os
 
 class StanfordNLP:
     def __init__(self, host='http://localhost', port=9000):
@@ -72,6 +73,10 @@ class NewsParser:
             for word in content:
                 if word not in self.words:
                     self.words.append(word)
+
+    def cut(self, text):
+        return self.nlp.word_tokenize(text)
+
 
     def get_speaker(self):
         for token in self.tokens:
@@ -157,8 +162,8 @@ class NewsParser:
         index = self.search(token, FILTER_DEP)
         # if index != self.tokens.index(token):
         print("find dependency start:{}, word:{}".format(index, self.tokens[index - 1:]))
-        # else:
-        #     self.search_all(token, FILTER_DEP)
+
+        return index
 
 
     # find a minimum index in dependency tree
@@ -241,10 +246,12 @@ class NewsParser:
         print(self.pos)
         print(self.ner)
 
-
         speaker = self.get_speaker()
         self.result['speaker'] = speaker[1]
-        self.get_sentence_start(speaker[0])
+        self.result['word_like_say'] = speaker[0]
+        index = self.get_sentence_start(speaker[0])
+        self.result['sub_sen'] = ''.join(t for t in self.tokens[index - 1:])
+        self.result['tokens'] = self.tokens
 
         self.clean()
 

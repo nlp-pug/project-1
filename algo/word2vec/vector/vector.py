@@ -36,6 +36,13 @@ class Vector:
             # self.get_similar_words(words + result_words, threshold, depth - 1)
             self.get_similar_words(word, threshold, depth - 1)
 
+    def vec(self, word):
+        pass
+        # if word not in self.model.wv.vocab:
+            # self.model = Word2Vec([word], min_count=1, size=32)
+            # return self.model
+
+
     def save_similar_words(self):
         with open("similar_words.txt", 'w') as fw:
             for word in self.similar_words:

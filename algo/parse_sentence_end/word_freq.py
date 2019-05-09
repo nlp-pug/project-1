@@ -7,6 +7,7 @@ DATAPATH='../word2vec/data/sentences/'
 class WordFreq:
     def __init__(self):
         self.counter = Counter()
+        self.sum = 0
 
     def calc_word_freq(self, path):
         for file in os.listdir(path):
@@ -22,12 +23,21 @@ class WordFreq:
             for k, v in self.counter.items():
                 f.write('{}:{}\n'.format(k, v))
 
+        for k, v in self.counter.items():
+            self.sum += int(v)
+
+        with open('sum_count.txt', 'w') as f:
+            f.write(str(self.sum))
+
     def load(self):
 
         with open('counter.txt', 'r') as f:
             lines = [line.strip().split(':') for line in f]
 
         self.counter = Counter({line[0]: int(line[1]) for line in lines})
+
+        with open('sum_count.txt', 'r') as f:
+            self.sum = int(f.read())
 
 
 # wordfreq = WordFreq()
