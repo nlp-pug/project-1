@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+   <div class="container">
+        <div class="row justify-content-md-center">
+            <div class="col-2">
+                <form name="myForm">
+                    <li>
+                       <input type="radio" name="myRadios"  value="1" /> Sample1
+                    </li>
+                    <li>
+                        <input type="radio" name="myRadios"  value="2" /> Sample2
+                    </li>
+                    <li>
+                        <input type="radio" name="myRadios"  value="3" /> Sample3
+                    </li>
+                </form>
+            </div>
+            <div class="col-9">
+                <label for="input_news">Input News:</label>
+                <form name="inputForm" action="" method="post" novalidate>
+                    <p>
+                        {{ form2.csrf_token }}
+                        {{ form2.content(rows='20',cols='100') }}
+                    </p>
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-10"></div>
+                            <div class="col-1"><p>{{ form2.clear() }}</p></div>
+                            <div class="col-1">{{ form2.submit() }}</div>
+                        </div>
+                    </div>
+{#                    <div class="col-1" style = "text-align:right;">#}
+{#                        <p>{{ form2.submit() }}</p>#}
+{#                    </div>#}
+{#                     <div class="col-1" style = "text-align:right;">#}
+{#                        <p>{{ form2.clear() }}</p>#}
+{#                    </div>#}
+                </form>
+        </div>
+    </div>
+
+    <script>
+        var rad = document.myForm.myRadios;
+        var prev = null;
+        for (var i = 0; i < rad.length; i++) {
+            rad[i].addEventListener('change', function() {
+
+                readTextFile("../static/SampleInput.json", function(text){
+                    var data = JSON.parse(text);
+                    var sampleIndex = "Sample" + this.rad.value;
+                    document.inputForm.content.value =  data[sampleIndex];
+                    console.log(sampleIndex);
+                    console.log(data[sampleIndex]);
+
+                });
+            });
+        }
+
+        function readTextFile(file, callback) {
+            var rawFile = new XMLHttpRequest();
+            rawFile.overrideMimeType("application/json");
+            rawFile.open("GET", file, true);
+            rawFile.onreadystatechange = function() {
+                if (rawFile.readyState === 4 && rawFile.status == "200") {
+                    callback(rawFile.responseText);
+                }
+            }
+            rawFile.send(null);
+        }
+    </script>
+{% endblock %}
