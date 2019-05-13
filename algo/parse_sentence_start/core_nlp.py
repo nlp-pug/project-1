@@ -1,8 +1,3 @@
-'''
-A sample code usage of the python package stanfordcorenlp to access a Stanford CoreNLP server.
-Written as part of the blog post: https://www.khalidalnajjar.com/how-to-setup-and-use-stanford-corenlp-server-with-python/
-'''
-
 from stanfordcorenlp import StanfordCoreNLP
 from nltk.tree import Tree
 from nltk.tree import ParentedTree
@@ -269,21 +264,3 @@ class NewsParser:
         self.ner = None
         self.dep_parse_dict = {}
 
-
-
-if __name__ == '__main__':
-    # sNLP = StanfordNLP()
-    # text = 'A blog post using Stanford CoreNLP Server. Visit www.khalidalnajjar.com for more details.'
-    text = '据外媒报道，英国伦敦威斯敏斯特地方法院将于5月2日开始审理向美国移交“维基揭秘”创始人朱利安?阿桑奇的问题。'
-    # text = '会面结束后，郭台铭告诉媒体，他告诉特朗普，在威斯康星州的投资将会继续，预计明年5月正式投产时，能邀请特朗普亲自前往，特朗普一口答应'
-    # text = '此前4月17日下午，郭台铭因“妈祖托梦”，宣布“参加2020年台湾地区领导人选举”。'
-    parser = NewsParser("similar_words.txt")
-    parser.generate(text)
-    # print("Annotate:", sNLP.annotate(text))
-    # print("POS:", sNLP.pos(text))
-    # print("Tokens:", sNLP.word_tokenize(text))
-    # print("NER:", sNLP.ner(text))
-    # print("Parse:", sNLP.parse(text))
-    # print("Dep Parse:", sNLP.dependency_parse(text))
-
-# nlp = StanfordCoreNLP('http://localhost', port=9000, lang='zh')
