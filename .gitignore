@@ -77,3 +77,4 @@ algo/word2vec/vector/vector
 algo/word2vec/vector/vector.trainables.syn1neg.npy
 algo/word2vec/vector/vector.wv.vectors.npy
 algo/"word2vec/vector/\347\231\276\345\272\246\345\201\234\347\224\250\350\257\215\350\241\250.txt"
+__pycache__
