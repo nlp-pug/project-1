@@ -13,6 +13,12 @@
                     <li>
                         <input type="radio" name="myRadios"  value="3" /> Sample3
                     </li>
+                    <li>
+                        <input type="radio" name="myRadios"  value="4" /> Sample4
+                    </li>
+                    <li>
+                        <input type="radio" name="myRadios"  value="5" /> Sample5
+                    </li>
                 </form>
             </div>
             <div class="col-9">
@@ -45,11 +51,12 @@
         for (var i = 0; i < rad.length; i++) {
             rad[i].addEventListener('change', function() {
 
-                readTextFile("../static/SampleInput.json", function(text){
+                readTextFile("../static/SampleData.json", function(text){
+                    console.log(text)
                     var data = JSON.parse(text);
                     var sampleIndex = "Sample" + this.rad.value;
                     document.inputForm.content.value =  data[sampleIndex];
-                    console.log(sampleIndex);
+                    console.log(data);
                     console.log(data[sampleIndex]);
 
                 });
