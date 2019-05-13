@@ -12,8 +12,8 @@ conda activate nlp-pug
 
 ```shell
 # go to /home/stu/project-01/PUG/data
-# start script
-./start_corenlp.sh
+# start script on background
+./start_corenlp.sh &
 ```
 
 
