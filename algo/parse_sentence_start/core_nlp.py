@@ -1,6 +1,4 @@
 from stanfordcorenlp import StanfordCoreNLP
-from nltk.tree import Tree
-from nltk.tree import ParentedTree
 from collections import defaultdict
 import logging
 import json
