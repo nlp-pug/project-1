@@ -6,6 +6,7 @@ tokens_path = os.getcwd() + '/../data/sentences/'
 
 STOPWORDS = []
 
+
 class Vector:
     def __init__(self):
         self.model = None
@@ -13,7 +14,7 @@ class Vector:
 
     def generator(self, path):
         sentences = models.word2vec.PathLineSentences(path)
-        self.model = Word2Vec(sentences, min_count=30)
+        self.model = Word2Vec(sentences, min_count=1)
 
     def load(self, path):
         # self.model = Word2Vec.load("vector")
@@ -55,6 +56,15 @@ def get_stopwords():
         STOPWORDS.append(f.readline())
 
 
+def generate():
+    vector = Vector()
+    vector.generator(tokens_path)
+    vector.save()
+    print(vector.model.wv.most_similar("说"))
+
+
+# generate()
+
 # vector = Vector()
 # vector.generator(tokens_path)
 # vector.save()
@@ -62,8 +72,9 @@ def get_stopwords():
 
 # get_stopwords()
 #
-# vector = Vector()
-# vector.load(os.getcwd() + '/vector')
+vector = Vector()
+vector.load(os.getcwd() + '/vector')
+print(vector.model.wv["副主席"])
 # # vector.get_similar_words(["说", "称", "表示", "声明"], 0, 5)
 # # print(vector.similar_words)
 # # print(len(vector.similar_words))
