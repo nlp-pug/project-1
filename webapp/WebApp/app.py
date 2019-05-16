@@ -8,6 +8,7 @@ import json
 # import sys
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'any secret string'
@@ -15,14 +16,13 @@ CsrfProtect(app)
 
 class SimluationFunc:
     def inputtext(self, text):
-        if text != 'None':
+        if text:
             return
 
     def outputresult(self):
         sampledata = [{'author': 'Author1', 'content': 'sample1'}, {'author': 'Author2', 'content': 'Sample2'},
                       {'author': 'Author3', 'content': 'Sample3'}, {'author': 'Author4', 'content': 'Sample4'}]
         return sampledata
-
 
 sf = SimluationFunc()
 
@@ -35,6 +35,12 @@ def input_form():
             form2.content.data = None
         elif form2.submit.data:
             # get output data from parse_end
+
+            split_sentences = form2.content.data.replace("\r", "")
+            split_sentences = split_sentences.replace("\n", "")
+            split_sentences = re.split('。|！|？', split_sentences)
+
+            print(split_sentences, form2.content.data)
             sf.inputtext(text=form2.content.data)
             return redirect('/result')
     return render_template('input_pages.html', form2=form2)

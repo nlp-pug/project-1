@@ -5,24 +5,28 @@
             <div class="col-2">
                 <form name="myForm">
                     <li>
-                       <input type="radio" name="myRadios"  value="1" /> Sample1
+                       <input type="radio" name="myRadios"  value="1" /> Sample 1
                     </li>
+                    <br>
                     <li>
-                        <input type="radio" name="myRadios"  value="2" /> Sample2
+                        <input type="radio" name="myRadios"  value="2" /> Sample 2
                     </li>
+                    <br>
                     <li>
-                        <input type="radio" name="myRadios"  value="3" /> Sample3
+                        <input type="radio" name="myRadios"  value="3" /> Sample 3
                     </li>
-                    <li>
-                        <input type="radio" name="myRadios"  value="4" /> Sample4
-                    </li>
-                    <li>
-                        <input type="radio" name="myRadios"  value="5" /> Sample5
-                    </li>
+                    <br>
+{#                    <li>#}
+{#                        <input type="radio" name="myRadios"  value="4" /> Sample 4#}
+{#                    </li>#}
+{#                    <br>#}
+{#                    <li>#}
+{#                        <input type="radio" name="myRadios"  value="5" /> Sample 5#}
+{#                    </li>#}
                 </form>
             </div>
             <div class="col-9">
-                <label for="input_news">Input News:</label>
+                <label for="input_news"><h4>Input News:</h4></label>
                 <form name="inputForm" action="" method="post" novalidate>
                     <p>
                         {{ form2.csrf_token }}
@@ -47,7 +51,6 @@
 
     <script>
         var rad = document.myForm.myRadios;
-        var prev = null;
         for (var i = 0; i < rad.length; i++) {
             rad[i].addEventListener('change', function() {
 
