@@ -2,11 +2,19 @@
 # @Author: qirui
 # @Date:   2019-05-10 10:47:10
 # @Last Modified by:   qirui
-# @Last Modified time: 2019-05-10 11:07:57
+# @Last Modified time: 2019-05-10 17:20:26
 # @E-mail: 2596688048@qq.com
 
 
 import numpy as np
+
+
+def isfloat(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
 
 
 def getWordmap(textfile):
@@ -14,10 +22,18 @@ def getWordmap(textfile):
     We = []
     f = open(textfile, 'r', encoding='UTF-8')
     lines = f.readlines()
+
     for (n, i) in enumerate(lines):
+
+        print(n, i)
+
         i = i.split()
         j = 1
         v = []
+
+        if len(i) > 1 and not isfloat(i[1]):
+            continue
+
         while j < len(i):
             v.append(float(i[j]))
             j += 1

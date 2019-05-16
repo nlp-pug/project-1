@@ -4,9 +4,12 @@ import params
 import SIF_embedding
 import numpy as np
 from scipy.spatial.distance import cosine
+
 import sys, os
 sys.path.append(os.path.abspath('/home/stu/project-01/PUG/project-1/algo/parse_sentence_start'))
 from core_nlp import NewsParser
+
+
 def distance(v1, v2):
     return 1 - cosine(v1, v2)
 
