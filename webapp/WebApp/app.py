@@ -8,7 +8,12 @@ import json
 # import sys
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
-import re
+import sys, os
+sys.path.append(os.path.abspath('../parse_sentence_start'))
+sys.path.append(os.path.abspath('../parse_sentence_end'))
+from core_nlp import NewsParser
+
+from EndParse import parse_sentence_end
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'any secret string'
