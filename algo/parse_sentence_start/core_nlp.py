@@ -248,12 +248,16 @@ class NewsParser:
         self.result['sub_text_from_start'] = ''.join(t for t in self.tokens[index - 1:])
         self.result['tokens'] = self.tokens
 
-        sen_cut = [sen for sen in re.split("，|。|？|！", self.text) if sen != '']
+        sen_cut = [sen for sen in re.split("。|？|！", self.text) if sen != '']
 
         sub_sen_cut = [sen for sen in re.split("，|。|？|！", self.result['sub_text_from_start']) if sen != '']
 
         self.result['sen_cuts'] = sen_cut
-        self.result['start_index_in_sen_cuts'] = sen_cut.index(sub_sen_cut[0])
+        self.result['start_index_in_sen_cuts'] = None
+        for sen in sen_cut:
+            if sub_sen_cut[0] in sen:
+                self.result['start_index_in_sen_cuts'] = sen_cut.index(sen)
+                break
 
         self.clean()
 
