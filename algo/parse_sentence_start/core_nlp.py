@@ -4,6 +4,7 @@ import logging
 import json
 import math
 import os
+import re
 
 
 logging.basicConfig(level=logging.DEBUG, format='ParseStart:%(levelname)s - %(message)s')
@@ -243,9 +244,16 @@ class NewsParser:
         self.result['speaker'] = speaker[1]
         self.result['word_like_say'] = speaker[0]
         index = self.get_sentence_start(speaker[0])
-        self.result['sub_sen_index'] = sum([len(self.tokens[i]) for i in range(index - 1)])
-        self.result['sub_sen'] = ''.join(t for t in self.tokens[index - 1:])
+        self.result['start_index_in_text'] = sum([len(self.tokens[i]) for i in range(index - 1)])
+        self.result['sub_text_from_start'] = ''.join(t for t in self.tokens[index - 1:])
         self.result['tokens'] = self.tokens
+
+        sen_cut = [sen for sen in re.split("，|。|？|！", self.text) if sen != '']
+
+        sub_sen_cut = [sen for sen in re.split("，|。|？|！", self.result['sub_text_from_start']) if sen != '']
+
+        self.result['sen_cuts'] = sen_cut
+        self.result['start_index_in_sen_cuts'] = sen_cut.index(sub_sen_cut[0])
 
         self.clean()
 
