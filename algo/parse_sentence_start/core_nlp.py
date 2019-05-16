@@ -257,6 +257,8 @@ class NewsParser:
         for sen in sen_cut:
             if sub_sen_cut[0] in sen:
                 self.result['start_index_in_sen_cuts'] = sen_cut.index(sen)
+                self.result['start_index_in_text'] = sen.index(sub_sen_cut[0])
+                #  print(sen[self.result['start_index_in_text']:])
                 break
 
         self.clean()
