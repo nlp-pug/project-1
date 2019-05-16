@@ -9,8 +9,8 @@ import json
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 import sys, os
-sys.path.append(os.path.abspath('../parse_sentence_start'))
-sys.path.append(os.path.abspath('../parse_sentence_end'))
+sys.path.append(os.path.abspath('../algo/parse_sentence_start'))
+sys.path.append(os.path.abspath('../algo/parse_sentence_end'))
 from core_nlp import NewsParser
 
 from EndParse import parse_sentence_end
