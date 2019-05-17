@@ -14,21 +14,21 @@ import re
 
 sys.path.append(os.path.abspath('../../algo/parse_sentence_end'))
 # from core_nlp import NewsParser
-from EndParser import parse_sentence_end
+# from EndParser import parse_sentence_end
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'any secret string'
 CsrfProtect(app)
 
-class SimluationFunc:
-    def inputtext(self, text):
-        if text:
-            return
-
-    def outputresult(self):
-        sampledata = [{'author': 'Author1', 'content': 'sample1'}, {'author': 'Author2', 'content': 'Sample2'},
-                      {'author': 'Author3', 'content': 'Sample3'}, {'author': 'Author4', 'content': 'Sample4'}]
-        return sampledata
+# class SimluationFunc:
+#     def inputtext(self, text):
+#         if text:
+#             return
+#
+#     def outputresult(self):
+#         sampledata = [{'author': 'Author1', 'content': 'sample1'}, {'author': 'Author2', 'content': 'Sample2'},
+#                       {'author': 'Author3', 'content': 'Sample3'}, {'author': 'Author4', 'content': 'Sample4'}]
+#         return sampledata
 
 def parse_sentence_end(text):
     if text:
@@ -36,7 +36,7 @@ def parse_sentence_end(text):
                       {'author': 'Author3', 'content': 'Sample3'}, {'author': 'Author4', 'content': 'Sample4'}]
         return sampledata
 
-sf = SimluationFunc()
+# sf = SimluationFunc()
 parse_result = None
 
 
@@ -53,7 +53,7 @@ def input_form():
             split_sentences = split_sentences.replace("\n", "")
             split_sentences = re.split('。|！|？', split_sentences)
 
-            print(split_sentences, form2.content.data)
+            print(form2.content.data)
             # sf.inputtext(text=form2.content.data)
             global parse_result
             parse_result = parse_sentence_end(text=form2.content.data)
