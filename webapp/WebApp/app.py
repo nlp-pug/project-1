@@ -9,11 +9,12 @@ import json
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
 import sys, os
-sys.path.append(os.path.abspath('../algo/parse_sentence_start'))
-sys.path.append(os.path.abspath('../algo/parse_sentence_end'))
-from core_nlp import NewsParser
+import re
 
-from EndParse import parse_sentence_end
+
+sys.path.append(os.path.abspath('../../algo/parse_sentence_end'))
+# from core_nlp import NewsParser
+from EndParser import parse_sentence_end
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'any secret string'
@@ -29,7 +30,14 @@ class SimluationFunc:
                       {'author': 'Author3', 'content': 'Sample3'}, {'author': 'Author4', 'content': 'Sample4'}]
         return sampledata
 
+def parse_sentence_end(text):
+    if text:
+        sampledata = [{'author': 'Lucy', 'content': 'Hahaha'}, {'author': 'Author2', 'content': 'Sample2'},
+                      {'author': 'Author3', 'content': 'Sample3'}, {'author': 'Author4', 'content': 'Sample4'}]
+        return sampledata
+
 sf = SimluationFunc()
+parse_result = None
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -46,14 +54,17 @@ def input_form():
             split_sentences = re.split('。|！|？', split_sentences)
 
             print(split_sentences, form2.content.data)
-            sf.inputtext(text=form2.content.data)
+            # sf.inputtext(text=form2.content.data)
+            global parse_result
+            parse_result = parse_sentence_end(text=form2.content.data)
             return redirect('/result')
     return render_template('input_pages.html', form2=form2)
 
 
 @app.route('/result')
 def post_words():
-    views = sf.outputresult()
+    # views = sf.outputresult()
+    views = parse_result
     numbers = len(views)
     print(len(views), views)
 
