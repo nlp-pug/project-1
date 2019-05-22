@@ -2,7 +2,7 @@
 # @Author: qirui
 # @Date:   2019-05-10 10:47:10
 # @Last Modified by:   qirui
-# @Last Modified time: 2019-05-10 17:20:26
+# @Last Modified time: 2019-05-23 01:17:05
 # @E-mail: 2596688048@qq.com
 
 
@@ -25,14 +25,14 @@ def getWordmap(textfile):
 
     for (n, i) in enumerate(lines):
 
-        print(n, i)
+        # print(n, i)
 
         i = i.split()
         j = 1
         v = []
 
-        if len(i) > 1 and not isfloat(i[1]):
-            continue
+        # if len(i) > 1 and not isfloat(i[1]):
+        #     continue
 
         while j < len(i):
             v.append(float(i[j]))
@@ -59,14 +59,14 @@ def getWordWeight(weightfile, a=1e-3):
                 N += float(i[1])
             else:
                 print(i)
-    for key, value in word2weight.iteritems():
+    for key, value in word2weight.items():
         word2weight[key] = a / (a + value / N)
     return word2weight
 
 
 def getWeight(words, word2weight):
     weight4ind = {}
-    for word, ind in words.iteritems():
+    for word, ind in words.items():
         if word in word2weight:
             weight4ind[ind] = word2weight[word]
         else:
@@ -124,8 +124,8 @@ def sentences2idx(sentences, words):
 
 def seq2weight(seq, mask, weight4ind):
     weight = np.zeros(seq.shape).astype('float32')
-    for i in xrange(seq.shape[0]):
-        for j in xrange(seq.shape[1]):
+    for i in range(seq.shape[0]):
+        for j in range(seq.shape[1]):
             if mask[i, j] > 0 and seq[i, j] >= 0:
                 weight[i, j] = weight4ind[seq[i, j]]
     weight = np.asarray(weight, dtype='float32')

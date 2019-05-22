@@ -1,0 +1,23 @@
+
+.jumbotron-section-1 {
+padding-top: 10px !important;
+}
+
+.jumbotron-section-1-bg {
+/*background: url('../img/banner-img/bg10.jpg') no-repeat center center; */
+height: 30px;
+}
+
+.introduction {
+text-align: center;
+vertical-align: middle;
+text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.name {
+font-family: "custom-headerfont",sans-serif;
+}
+
+.introduction p {
+font-weight: bold;
+}
