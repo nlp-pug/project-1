@@ -1,13 +1,22 @@
 
 import data_io
-import params
+import params as para
 import SIF_embedding
-import numpy as np
 from scipy.spatial.distance import cosine
+import jieba, re
 
 import sys, os
-sys.path.append(os.path.abspath('/home/stu/project-01/PUG/project-1/algo/parse_sentence_start'))
+sys.path.append(os.path.abspath('/home/project-01/PUG/project-1/algo/parse_sentence_start'))
 from core_nlp import NewsParser
+
+
+
+def cut(string):
+    return ' '.join(jieba.cut(string))
+
+
+def token(string):
+    return re.findall(r'[\d|\w]+', string)
 
 
 def distance(v1, v2):
@@ -18,10 +27,11 @@ def parse_sentence_end(text):
 
     # input
     # word vector file, can be downloaded from GloVe website
-    wordfile = '/home/stu/project-01/PUG/data/wiki_sentences100.txt'
+    wordfile = '/home/project-01/PUG/data/wiki_sentences100.txt'
     # each line is a word and its frequency
-    weightfile = '/home/stu/project-01/PUG/data/word_cnt'
-    # the parameter in the SIF weighting scheme, usually in the range [3e-5, 3e-3]
+    weightfile = '/home/project-01/PUG/data/word_cnt.txt'
+    # the parameter in the SIF weighting scheme, usually in the range [3e-5,
+    # 3e-3]
     weightpara = 1e-3
     rmpc = 1  # number of principal components to remove in SIF weighting scheme
 
@@ -34,18 +44,21 @@ def parse_sentence_end(text):
     weight4ind = data_io.getWeight(words, word2weight)
 
     # set parameters
-    params = params.params()
+    params = para.params()
     params.rmpc = rmpc
 
+    parser = NewsParser('/home/project-01/PUG/data/similar_words.txt')
 
-    parser = NewsParser('/home/stu/project-01/PUG/data/similar_words.txt')
-
-    res = []
+    result = []
 
     while text:
-        author, start_index_in_text, _, _, sen_cuts, start_index = parser.generate(text)
+        res = parser.generate(text)
+        author, start_index_in_text, sen_cuts, start_index = res['speaker'], res['start_index_in_text'], res['sen_cuts'], res['start_index_in_sen_cuts']
 
-        sentences = sen_cuts
+        sentences = [token(sen) for sen in sen_cuts]
+        sentences = [' '.join(s) for s in sentences]
+        sentences = [cut(s) for s in sentences]
+
 
         # load sentences
         # x is the array of word indices, m is the binary mask indicating whether
@@ -57,20 +70,29 @@ def parse_sentence_end(text):
         # embedding[i,:] is the embedding for sentence i
         embedding = SIF_embedding.SIF_embedding(We, x, w, params)
 
+
         length = len(embedding)
-        end_index = start_index + 1
+        end_index = start_index
         sim = -2
-        while end_index < length and (sim == -2 or sim > 0.8):
+        while end_index + 1 < length and (sim == -2 or sim > 0.8):
+            end_index += 1
             sim = distance(embedding[0], embedding[end_index])
+
+        if sim > 0.8:
             end_index += 1
 
-        content = sentences[start_index][start_index_in_text:] + ''.join(sentences[start_index+1:end_index])
-        res.append({'author':author,'content':content})
+        begin = text.find(sen_cuts[start_index][start_index_in_text:])
+        end = text.find(sen_cuts[end_index - 1]) + len(sen_cuts[end_index - 1]) + 1
+        content = text[begin:end]
 
-        text = ''.join(sentences[end_index:])
+        print('Author: {}, Content: {}'.format(author, content))
+        result.append({'author': author, 'content': content})
+
+        text = text[end:]
+        print('remain_text: ', text)
 
 
-    return res
+    return result
 
 
 if __name__ == '__main__':
