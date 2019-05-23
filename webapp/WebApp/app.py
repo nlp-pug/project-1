@@ -16,7 +16,7 @@ from EndParser import parse_sentence_end
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'any secret string'
 CsrfProtect(app)
-from flask_app import app as application
+from app import app as application
 
 # Externally Visible Server
 # flask run --host=0.0.0.0
