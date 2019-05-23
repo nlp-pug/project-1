@@ -308,7 +308,8 @@ class NewsParser:
         index = self.get_sentence_start(speaker[0])
         self.result['start_index_in_text'] = sum([len(self.tokens[i]) for i in range(index - 1)]) + stop_index
         self.result['sub_text_from_start'] = ''.join(t for t in self.tokens[index - 1:])
-        self.result['tokens'] = self.tokens
+
+        self.result['tokens'] = self.nlp.word_tokenize(self.full_text)
 
         sen_cut = [sen for sen in re.split("。|？|！", self.full_text) if sen != '']
 
