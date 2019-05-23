@@ -18,8 +18,7 @@ app.config['SECRET_KEY'] = 'any secret string'
 CsrfProtect(app)
 from app import app as application
 
-# Externally Visible Server
-# flask run --host=0.0.0.0
+
 
 # for test:
 # def parse_sentence_end(text):
@@ -84,4 +83,4 @@ class RadioForm(FlaskForm):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=8719, debug=True)
