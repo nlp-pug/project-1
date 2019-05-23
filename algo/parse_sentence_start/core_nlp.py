@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class StanfordNLP:
-    def __init__(self, host='http://localhost', port=9123):
+    def __init__(self, host='http://localhost', port=9000):
         self.nlp = StanfordCoreNLP(host, port=port,
                                    timeout=30000, lang='zh')  # , quiet=False, logging_level=logging.DEBUG)
         self.props = {
@@ -58,6 +58,7 @@ class NewsParser:
     def __init__(self, path):
         self.nlp = StanfordNLP()
         self.words = []
+        self.full_text = None
         self.text = None
         self.tokens = None
         self.dependency_parse = None
@@ -143,17 +144,23 @@ class NewsParser:
     # eg: 英国伦敦的媒体
     #     get_ner will only get 媒体
     def get_full_speaker(self, index):
-        speaker = ''
 
-        # speaker, one word
-        if str(index) not in self.dep_parse_dict.keys():
-            return self.tokens[index - 1]
+        
+        speaker_may_start = index
+        while str(speaker_may_start) in self.dep_parse_dict.keys():
+            #  print(speaker_may_start)
+            index_list = []
+            for dep in self.dep_parse_dict[str(speaker_may_start)]:
+                index_list.append(int(dep[2]))
 
-        for dep in self.dep_parse_dict[str(index)]:
-            speaker += self.get_full_speaker(dep[2])
+            if min(index_list) > speaker_may_start:
+                break
+            else:
+                speaker_may_start = min(index_list)
+        #  speaker += self.tokens[index - 1]
+        #  speaker += self.tokens[speaker_may_start:]
 
-        speaker += self.tokens[index - 1]
-        return speaker
+        return ''.join(self.tokens[speaker_may_start - 1:index])
 
     def get_sentence_start(self, token):
 
@@ -222,33 +229,75 @@ class NewsParser:
             for t in v:
                 chunks.append(t)
         return chunks
+    
+    def preprocessor(self, text):
+
+        stop_words = ['。', '？', '！']
+        #  pre_text = text.split('。')
+        #  logger.debug("----------{}".format(pre_text))
+
+        state_machine = ['None', 'FIND_ONE_Q_MARK', 'FOR_ANOTHER_Q_MARK', 'FOR_STOP_MARK', 'CUT_SENTENCE']
+
+        state = 'FOR_STOP_MARK'
+        stop_index = 0
+        for index, word in enumerate(text):
+            if word == '“' and state == 'FOR_STOP_MARK':
+                state = 'FOR_ANOTHER_Q_MARK'
+            elif word == '”' and state == 'FOR_ANOTHER_Q_MARK':
+                state = 'FOR_STOP_MARK'
+            elif word in stop_words and state == 'FOR_STOP_MARK':
+                stop_index = index
+                state = 'CUT_SENTENCE'
+                break
+        if state == 'CUT_SENTENCE':
+            return text[0:stop_index + 1], stop_index + 1
+        else:
+            return text, len(text)
 
     def generate(self, text):
-        self.text = text
-        self.tokens = self.nlp.word_tokenize(text)
-        self.dependency_parse = self.nlp.dependency_parse(text)
-        self.parse = self.nlp.parse(text)
-        self.pos = self.nlp.pos(text)
-        self.ner = self.nlp.ner(text)
 
-        logger.debug(self.tokens)
-        logger.debug(self.dependency_parse)
-        logger.debug(self.parse)
-        logger.debug(self.pos)
-        logger.debug(self.ner)
+        self.full_text = text
+        self.cut_text = text
 
-        speaker = self.get_speaker()
-        if speaker is None:
-            return None
+        #  if len(self.preprocessor(text)) > 1:
+            #  self.text = self.preprocessor(text)[0] + '。'
+        #  print(self.preprocessor(text))
+        while True:
+            self.text, stop_index = self.preprocessor(self.cut_text)
+            if stop_index == 0:
+                return None
+
+            print('------{} {}'.format(self.text, stop_index))
+
+            self.tokens = self.nlp.word_tokenize(self.text)
+            self.dependency_parse = self.nlp.dependency_parse(self.text)
+            self.parse = self.nlp.parse(self.text)
+            self.pos = self.nlp.pos(self.text)
+            self.ner = self.nlp.ner(self.text)
+
+            logger.debug(self.tokens)
+            logger.debug(self.dependency_parse)
+            logger.debug(self.parse)
+            logger.debug(self.pos)
+            logger.debug(self.ner)
+
+            speaker = self.get_speaker()
+            if speaker is None:
+                if stop_index >= len(text):
+                    return None
+                else:
+                    self.cut_text = self.cut_text[stop_index:]
+            else:
+                break
 
         self.result['speaker'] = speaker[1]
         self.result['word_like_say'] = speaker[0]
         index = self.get_sentence_start(speaker[0])
-        self.result['start_index_in_text'] = sum([len(self.tokens[i]) for i in range(index - 1)])
+        self.result['start_index_in_text'] = sum([len(self.tokens[i]) for i in range(index - 1)]) + stop_index
         self.result['sub_text_from_start'] = ''.join(t for t in self.tokens[index - 1:])
         self.result['tokens'] = self.tokens
 
-        sen_cut = [sen for sen in re.split("。|？|！", self.text) if sen != '']
+        sen_cut = [sen for sen in re.split("。|？|！", self.full_text) if sen != '']
 
         sub_sen_cut = [sen for sen in re.split("，|。|？|！", self.result['sub_text_from_start']) if sen != '']
 
@@ -268,6 +317,7 @@ class NewsParser:
         return self.result
 
     def clean(self):
+        self.full_text = None
         self.text = None
         self.tokens = None
         self.dependency_parse = None
