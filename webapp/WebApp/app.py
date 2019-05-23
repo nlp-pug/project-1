@@ -7,13 +7,16 @@ from wtforms.validators import DataRequired
 import sys
 import os
 import re
-
+path = '/home/project-01/PUG/project-1/webapp/WebApp'
 sys.path.append(os.path.abspath('../../algo/parse_sentence_end'))
+if path not in sys.path:
+   sys.path.insert(0, path)
 from EndParser import parse_sentence_end
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'any secret string'
 CsrfProtect(app)
+from flask_app import app as application
 
 # Externally Visible Server
 # flask run --host=0.0.0.0
