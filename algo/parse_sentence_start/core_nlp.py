@@ -78,14 +78,18 @@ class NewsParser:
         return self.nlp.word_tokenize(text)
 
     def get_speaker(self):
+        token_index = 0
         for token in self.tokens:
             # it indicate finding a word similar to "说"
+            token_index += len(token)
             if token in self.words:
 
                 logger.debug("found token {} in words, index {}".format(token,
                         self.tokens.index(token) + 1))
 
                 speaker_index = self.get_ner(token)
+                if speaker_index == None:
+                    return ['no speaker', token_index]
 
                 full_speaker = self.get_full_speaker(speaker_index)
 
@@ -93,7 +97,7 @@ class NewsParser:
 
                 return [token, full_speaker]
 
-        return None
+        return ['no tokens', 0]
 
     # find an speaker index in text
     def get_ner(self, token):
@@ -282,13 +286,22 @@ class NewsParser:
             logger.debug(self.ner)
 
             speaker = self.get_speaker()
-            if speaker is None:
+            if speaker[0] == 'no tokens':
                 if stop_index >= len(text):
                     return None
                 else:
                     self.cut_text = self.cut_text[stop_index:]
+            elif speaker[0] == 'no speaker':
+                MARKS = ['，', '。', '？', '！', '；']
+                for i, word in enumerate(self.cut_text[speaker[1]:]):
+                    if word in MARKS:
+                        self.cut_text = self.cut_text[speaker[1] + i + 1:]
+                        break
             else:
                 break
+
+        if speaker[0] == 'no speaker':
+            return None
 
         self.result['speaker'] = speaker[1]
         self.result['word_like_say'] = speaker[0]
