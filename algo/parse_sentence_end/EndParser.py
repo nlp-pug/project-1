@@ -24,27 +24,40 @@ def distance(v1, v2):
     return 1 - cosine(v1, v2)
 
 
-# word vector file, can be downloaded from GloVe website
-wordfile = '/home/project-01/PUG/data/wiki_sentences100.txt'
-# each line is a word and its frequency
-weightfile = '/home/project-01/PUG/data/word_cnt.txt'
-# the parameter in the SIF weighting scheme, usually in the range [3e-5, 3e-3]
-weightpara = 1e-3
-rmpc = 1  # number of principal components to remove in SIF weighting scheme
+words = None
+We = None
+word2weight = None
+weight4ind = None
+params = None
+def parse_sentence_init():
+    global words
+    global We
+    global word2weight
+    global weight4ind
+    global params
 
-# load word vectors
-(words, We) = data_io.getWordmap(wordfile)
-# load word weights
-# word2weight['str'] is the weight for the word 'str'
-word2weight = data_io.getWordWeight(weightfile, weightpara)
-# weight4ind[i] is the weight for the i-th word
-weight4ind = data_io.getWeight(words, word2weight)
+    # word vector file, can be downloaded from GloVe website
+    wordfile = '/home/project-01/PUG/data/wiki_sentences100.txt'
+    # each line is a word and its frequency
+    weightfile = '/home/project-01/PUG/data/word_cnt.txt'
+    # the parameter in the SIF weighting scheme, usually in the range [3e-5, 3e-3]
+    weightpara = 1e-3
+    rmpc = 1  # number of principal components to remove in SIF weighting scheme
 
-# set parameters
-params = para.params()
-params.rmpc = rmpc
+    # load word vectors
+    (words, We) = data_io.getWordmap(wordfile)
+    # load word weights
+    # word2weight['str'] is the weight for the word 'str'
+    word2weight = data_io.getWordWeight(weightfile, weightpara)
+    # weight4ind[i] is the weight for the i-th word
+    weight4ind = data_io.getWeight(words, word2weight)
 
-parser = NewsParser('/home/project-01/PUG/data/similar_words.txt')
+    # set parameters
+    params = para.params()
+    params.rmpc = rmpc
+
+    parser = NewsParser('/home/project-01/PUG/data/similar_words.txt')
+    print('load data finished')
 
 
 def parse_sentence_end(text):
@@ -56,14 +69,16 @@ def parse_sentence_end(text):
         res = parser.generate(text)
         if not res:
             break
-        author, start_index_in_text, sen_cuts, start_index = res['speaker'], res['start_index_in_text'], res['sen_cuts'], res['start_index_in_sen_cuts']
+        author, start_index_in_text, sen_cuts, start_index = res['speaker'], res[
+            'start_index_in_text'], res['sen_cuts'], res['start_index_in_sen_cuts']
 
         sentences = [token(sen) for sen in sen_cuts]
         sentences = [' '.join(s) for s in sentences]
         sentences = [cut(s) for s in sentences if s]
 
         # load sentences
-        # x is the array of word indices, m is the binary mask indicating whether there is a word in that location
+        # x is the array of word indices, m is the binary mask indicating
+        # whether there is a word in that location
         x, m = data_io.sentences2idx(sentences, words)
         w = data_io.seq2weight(x, m, weight4ind)  # get word weights
 
@@ -78,7 +93,7 @@ def parse_sentence_end(text):
             end_index += 1
             sim = distance(embedding[0], embedding[end_index])
 
-        if sim > 0.8:
+        if sim > 0.8 or sim == -2:
             end_index += 1
 
         begin = text.find(sen_cuts[start_index][start_index_in_text:])
@@ -88,9 +103,13 @@ def parse_sentence_end(text):
         print('Author: {}, Content: {}'.format(author, content))
         result.append({'author': author, 'content': content})
 
+        for i, sen in enumerate(sen_cuts):
+            if author in sen:
+                if i >= end_index:
+                    end = text.find(sen) + len(sen) + 1
+
         text = text[end:]
         print('remain_text: ', text)
-
 
     return result
 
