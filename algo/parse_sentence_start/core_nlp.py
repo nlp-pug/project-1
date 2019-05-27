@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class StanfordNLP:
-    def __init__(self, host='http://localhost', port=9000):
+    def __init__(self, host='http://localhost', port=9123):
         self.nlp = StanfordCoreNLP(host, port=port,
                                    timeout=30000, lang='zh')  # , quiet=False, logging_level=logging.DEBUG)
         self.props = {

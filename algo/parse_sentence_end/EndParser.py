@@ -29,12 +29,14 @@ We = None
 word2weight = None
 weight4ind = None
 params = None
+parser = None
 def parse_sentence_init():
     global words
     global We
     global word2weight
     global weight4ind
     global params
+    global parser
 
     # word vector file, can be downloaded from GloVe website
     wordfile = '/home/project-01/PUG/data/wiki_sentences100.txt'
@@ -69,8 +71,7 @@ def parse_sentence_end(text):
         res = parser.generate(text)
         if not res:
             break
-        author, start_index_in_text, sen_cuts, start_index = res['speaker'], res[
-            'start_index_in_text'], res['sen_cuts'], res['start_index_in_sen_cuts']
+        author, start_index_in_text, sen_cuts, start_index = res['speaker'], res['start_index_in_text'], res['sen_cuts'], res['start_index_in_sen_cuts']
 
         sentences = [token(sen) for sen in sen_cuts]
         sentences = [' '.join(s) for s in sentences]
@@ -107,17 +108,26 @@ def parse_sentence_end(text):
             if author in sen:
                 if i >= end_index:
                     end = text.find(sen) + len(sen) + 1
+                break
+
 
         text = text[end:]
         print('remain_text: ', text)
+
+
+    print(result)
 
     return result
 
 
 if __name__ == '__main__':
+
+    parse_sentence_init()
+
     with open('test_case.txt', "r") as f:
         text = f.read()
 
     # parse_sentence_end("特雷莎·梅在《星期日邮报》上发表的一篇文章中声明，让我们听听选民在地方选举中所表达的呼声吧，暂时搁置我们的分歧，达成我们的协议。 据媒体报道，在周四（2日）的英国地方议会选举中，保守党失去了一千多个席位，而计划夺取数百席位的工党亦失去81席。")
     # parse_sentence_end("特雷莎·梅在《星期日邮报》上发表的一篇文章中声明，让我们听听选民在地方选举中所表达的呼声吧，暂时搁置我们的分歧，达成我们的协议。 伊朗伊斯兰议会议长拉里·贾尼4日声明：“根据伊核协议，伊朗可以生产重水，这并不违反协议。我们将继续进行铀浓缩活动。”")
-    parse_sentence_end(text)
+    # parse_sentence_end(text)
+    parse_sentence_end("“我们的戏里有花神这一角色，而西方传统芭蕾舞表演中也有花精灵这一角色。所以在开始洽谈时，双方就探讨能否展开这种跨文化的交流。”《牡丹亭》导演李小平说。")
