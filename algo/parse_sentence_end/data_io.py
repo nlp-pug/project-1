@@ -18,6 +18,7 @@ def isfloat(value):
 
 
 def getWordmap(textfile):
+    #  return {}, []
     words = {}
     We = []
     f = open(textfile, 'r', encoding='UTF-8')

@@ -11,7 +11,7 @@ path = '/home/project-01/PUG/project-1/webapp/WebApp'
 sys.path.append(os.path.abspath('../../algo/parse_sentence_end'))
 if path not in sys.path:
    sys.path.insert(0, path)
-from EndParser import parse_sentence_end
+from EndParser import parse_sentence_end, parse_sentence_init
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'any secret string'
@@ -83,4 +83,5 @@ class RadioForm(FlaskForm):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8719, debug=True)
+    parse_sentence_init()
+    app.run(host='0.0.0.0', port=8790, debug=True)
