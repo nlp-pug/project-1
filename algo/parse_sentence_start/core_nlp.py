@@ -124,6 +124,7 @@ class NewsParser:
         #   eg: 据媒体报道, 这里报道是一个状语短句，没有主语
         #   所以查找与tokens相关的person, country, org
         path = [str(index)]
+        possiable_nsubj = []
 
         seen = []
 
@@ -135,14 +136,20 @@ class NewsParser:
 
             for dep in self.dep_parse_dict[node]:
                 if dep[0] == 'nsubj' or self.ner[dep[2] - 1][1] in FILTER_NER:
-                    return dep[2]
+                    possiable_nsubj.append(dep)
+                    # return dep[2]
                 else:
                     path.append(str(dep[2]))
 
             seen.append(node)
+	
+        if len(possiable_nsubj) == 0:
+            return None
+        else:
+            return min(possiable_nsubj, key=lambda x : int(x[1]) - int(x[2]))[2]
 
         # not found
-        return None
+        # return None
 
     # get other words which is relative with speaker
     # eg: 英国伦敦的媒体

@@ -12,22 +12,12 @@ sys.path.append(os.path.abspath('../../algo/parse_sentence_end'))
 if path not in sys.path:
    sys.path.insert(0, path)
 from EndParser import parse_sentence_end, parse_sentence_init
-
+parse_sentence_init()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'any secret string'
 CsrfProtect(app)
 from app import app as application
 
-
-
-# for test:
-# def parse_sentence_end(text):
-#     if text:
-#         sampledata = [{'author': 'Lucy', 'content': 'Hahaha'}, {'author': 'Author2', 'content': 'Sample2'},
-#                       {'author': 'Author3', 'content': 'Sample3'}, {'author': 'Author4', 'content': 'Sample4'}]
-#         return sampledata
-
-# sf = SimluationFunc()
 parse_result = None
 
 
@@ -83,5 +73,5 @@ class RadioForm(FlaskForm):
 
 
 if __name__ == '__main__':
-    parse_sentence_init()
+    #parse_sentence_init()
     app.run(host='0.0.0.0', port=8790, debug=True)
