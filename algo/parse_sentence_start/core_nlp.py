@@ -116,14 +116,15 @@ class NewsParser:
         index = self.tokens.index(token) + 1
         
         # multiple nsubj
-        dep_chunks = self.to_chunks(self.dep_parse_dict[str(index)]) 
-        print(dep_chunks)
-        if dep_chunks.count('nsubj') >= 2:
-            possiable_nsubj = []
-            for dep in self.dep_parse_dict[str(index)]:
-                if dep[0] == 'nsubj':
-                    possiable_nsubj.append(dep)
-            return min(possiable_nsubj, key=lambda x : int(x[1]) - int(x[2]))[2]
+        if str(index) in self.dep_parse_dict.keys():
+            dep_chunks = self.to_chunks(self.dep_parse_dict[str(index)])
+            print(dep_chunks)
+            if dep_chunks.count('nsubj') >= 2:
+                possiable_nsubj = []
+                for dep in self.dep_parse_dict[str(index)]:
+                    if dep[0] == 'nsubj':
+                        possiable_nsubj.append(dep)
+                return min(possiable_nsubj, key=lambda x : int(x[1]) - int(x[2]))[2]
             
             
 
@@ -226,6 +227,10 @@ class NewsParser:
 
         punct_left = math.inf
         index_list = [index]
+
+        if str(index) not in self.dep_parse_dict.keys():
+            return index
+
         if 'punct' not in self.to_chunks(self.dep_parse_dict[str(index)]):
             for key, dep in self.dep_parse_dict.items():
                 if index in self.to_chunks(dep):
@@ -334,7 +339,7 @@ class NewsParser:
         sub_sen_cut = [sen for sen in re.split("，|。|？|！", self.result['sub_text_from_start']) if sen != '']
 
         self.result['sen_cuts'] = sen_cut
-        self.result['start_index_in_sen_cuts'] = None
+        self.result['start_index_in_sen_cuts'] = 0
         for sen in sen_cut:
             if sub_sen_cut[0] in sen:
                 self.result['start_index_in_sen_cuts'] = sen_cut.index(sen)
