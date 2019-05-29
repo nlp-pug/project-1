@@ -96,6 +96,33 @@ class NewsParser:
                 logger.debug("speaker is: {}".format(full_speaker))
 
                 return [token, full_speaker]
+        
+        
+        if '说' in self.text:
+            FILTER_NER = ['ORGANIZATION', 'COUNTRY', 'PERSON']
+            print("---------------approch law")
+            left = self.text[:self.text.index('说')] 
+            right = self.text[self.text.index('说'):]
+            self.text = left + ' ' + right
+
+            self.tokens = self.nlp.word_tokenize(self.text)
+            self.dependency_parse = self.nlp.dependency_parse(self.text)
+            self.parse = self.nlp.parse(self.text)
+            self.pos = self.nlp.pos(self.text)
+            self.ner = self.nlp.ner(self.text)
+            for dep in self.dependency_parse:
+                if str(dep[1]) in self.dep_parse_dict.keys():
+                    self.dep_parse_dict[str(dep[1])].append(dep)
+                else:
+                    self.dep_parse_dict[str(dep[1])] = [dep]
+
+            index = self.tokens.index('说')
+            print(self.tokens)
+            print(index)
+            print(self.dependency_parse)
+
+            if self.ner[index - 1][1] in FILTER_NER:
+                return ['说', self.tokens[index - 1]]
 
         return ['no tokens', 0]
 
@@ -120,12 +147,16 @@ class NewsParser:
             dep_chunks = self.to_chunks(self.dep_parse_dict[str(index)])
             print(dep_chunks)
             if dep_chunks.count('nsubj') >= 2:
+                print("--------------multiple nsubj law")
                 possiable_nsubj = []
                 for dep in self.dep_parse_dict[str(index)]:
                     if dep[0] == 'nsubj':
                         possiable_nsubj.append(dep)
                 return min(possiable_nsubj, key=lambda x : int(x[1]) - int(x[2]))[2]
-            
+
+        if self.ner[index -1 - 1][1] in FILTER_NER:
+            print("---------------approch law 2")
+            return index - 1
             
 
         # start  a bfs search,
@@ -148,12 +179,14 @@ class NewsParser:
 
             for dep in self.dep_parse_dict[node]:
                 if dep[0] == 'nsubj' or self.ner[dep[2] - 1][1] in FILTER_NER:
+                    print("----------------search law {}".format(dep[2]))
                     return dep[2]
                 else:
                     path.append(str(dep[2]))
 
             seen.append(node)
-	
+
+
         # not found
         return None
 
@@ -289,6 +322,7 @@ class NewsParser:
                 return None
 
             print('------{} {}'.format(self.text, stop_index))
+            # speacial law for 说,有时候说不会被切词，比如 张军说
 
             self.tokens = self.nlp.word_tokenize(self.text)
             self.dependency_parse = self.nlp.dependency_parse(self.text)
@@ -323,6 +357,7 @@ class NewsParser:
         self.result['speaker'] = speaker[1]
         self.result['word_like_say'] = speaker[0]
         index = self.get_sentence_start(speaker[0])
+        print('----- {}'.format(index))
         self.result['start_index_in_text'] = sum([len(self.tokens[i]) for i in range(index - 1)]) + stop_index
         self.result['sub_text_from_start'] = ''.join(t for t in self.tokens[index - 1:])
         if self.result['sub_text_from_start'].count('“') == 0 \
