@@ -11,7 +11,7 @@ sudo systemctl start app
 sudo systemctl enable app
 ```
 
-check the status:
+check the status and debug:
 ```sh
 sudo systemctl status app
 ```
