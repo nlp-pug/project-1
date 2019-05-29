@@ -114,6 +114,18 @@ class NewsParser:
 
         # corenlp is 1-index, list is 0-index, transfer
         index = self.tokens.index(token) + 1
+        
+        # multiple nsubj
+        dep_chunks = self.to_chunks(self.dep_parse_dict[str(index)]) 
+        print(dep_chunks)
+        if dep_chunks.count('nsubj') >= 2:
+            possiable_nsubj = []
+            for dep in self.dep_parse_dict[str(index)]:
+                if dep[0] == 'nsubj':
+                    possiable_nsubj.append(dep)
+            return min(possiable_nsubj, key=lambda x : int(x[1]) - int(x[2]))[2]
+            
+            
 
         # start  a bfs search,
         # law1: nsubj
@@ -124,7 +136,6 @@ class NewsParser:
         #   eg: 据媒体报道, 这里报道是一个状语短句，没有主语
         #   所以查找与tokens相关的person, country, org
         path = [str(index)]
-        possiable_nsubj = []
 
         seen = []
 
@@ -136,20 +147,14 @@ class NewsParser:
 
             for dep in self.dep_parse_dict[node]:
                 if dep[0] == 'nsubj' or self.ner[dep[2] - 1][1] in FILTER_NER:
-                    possiable_nsubj.append(dep)
-                    # return dep[2]
+                    return dep[2]
                 else:
                     path.append(str(dep[2]))
 
             seen.append(node)
 	
-        if len(possiable_nsubj) == 0:
-            return None
-        else:
-            return min(possiable_nsubj, key=lambda x : int(x[1]) - int(x[2]))[2]
-
         # not found
-        # return None
+        return None
 
     # get other words which is relative with speaker
     # eg: 英国伦敦的媒体
@@ -315,6 +320,12 @@ class NewsParser:
         index = self.get_sentence_start(speaker[0])
         self.result['start_index_in_text'] = sum([len(self.tokens[i]) for i in range(index - 1)]) + stop_index
         self.result['sub_text_from_start'] = ''.join(t for t in self.tokens[index - 1:])
+        if self.result['sub_text_from_start'].count('“') == 0 \
+            and self.result['sub_text_from_start'].count('”') == 1:
+            for i in range(index):
+                if self.text[i] == '“':
+                    self.result['sub_text_from_start'] = self.text[i:index] + self.result['sub_text_from_start']
+                    break
 
         self.result['tokens'] = self.nlp.word_tokenize(self.full_text)
 
