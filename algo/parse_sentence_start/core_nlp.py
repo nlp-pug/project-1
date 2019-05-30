@@ -1,10 +1,11 @@
-from stanfordcorenlp import StanfordCoreNLP
-from collections import defaultdict
 import logging
 import json
 import math
 import os
 import re
+from enum import Enum
+from stanfordcorenlp import StanfordCoreNLP
+from collections import defaultdict
 
 
 logging.basicConfig(level=logging.DEBUG, format='ParseStart:%(levelname)s - %(message)s')
@@ -77,6 +78,170 @@ class NewsParser:
     def cut(self, text):
         return self.nlp.word_tokenize(text)
 
+    def token_filter(self):
+        def token_filter_func1(self):
+            token_index = 0
+            for token in self.tokens:
+                # it indicate finding a word similar to "说"
+                token_index += len(token)
+                if token in self.words:
+
+                    logger.debug("found token {} in words, corenlp index {}".format(token,
+                            self.tokens.index(token) + 1))
+
+                    return self.tokens.index(token)
+
+            return -1
+
+        # 有些句子，类似说，没有被单独分词
+        # “我们准备了3年，终于可以在本届艺术节期间来到莫斯科。这是一次特别的机会，我们在服装和化妆上做了特别的安排。《牡丹亭》是非常传统的艺术作品，故事很易懂，希望它也能得到俄罗斯观众的好评。”张军说。
+        # 这里，被切成了 张军说
+        # 所以，人为的隔开  张军 说
+        def token_filter_func2(self):
+            special_words = ['说']
+            for word in special_words:
+                if word in self.text:
+                    FILTER_NER = ['ORGANIZATION', 'COUNTRY', 'PERSON']
+                    left = self.text[:self.text.index(word)] 
+                    right = self.text[self.text.index(word):]
+                    self.text = left + ' ' + right
+
+                    self.tokens = self.nlp.word_tokenize(self.text)
+                    self.dependency_parse = self.nlp.dependency_parse(self.text)
+                    self.parse = self.nlp.parse(self.text)
+                    self.pos = self.nlp.pos(self.text)
+                    self.ner = self.nlp.ner(self.text)
+
+                    index = self.tokens.index(word)
+
+                    return index
+            return -1
+
+        return [token_filter_func1, token_filter_func2]
+    
+    def author_filter(self, upper_layer_func_name):
+
+        def author_filter_func1(self, token_index):
+            FILTER_NER = ['ORGANIZATION', 'COUNTRY', 'PERSON']
+            if self.ner[token_index - 1][1] in FILTER_NER:
+                logger.debug('find author {}'.format(self.tokens[token_index - 1]))
+                return token_index - 1
+            else:
+                return None
+
+        # multiple nsubj
+        # nsubj 主语关系，有些句子有两个主语,我们认为离谓语最近的主语，是实际主语的可能性更高
+        def author_filter_func2(self, token_index):
+            FILTER_NER = ['ORGANIZATION', 'COUNTRY', 'PERSON']
+            index = str(token_index + 1)
+
+            if index in self.dep_parse_dict.keys():
+                dep_chunks = self.to_chunks(self.dep_parse_dict[index])
+
+                if dep_chunks.count('nsubj') >= 2:
+                    logger.debug("--------------author multiple nsubj")
+                    possiable_nsubj = []
+                    for dep in self.dep_parse_dict[index]:
+                        if dep[0] == 'nsubj':
+                            possiable_nsubj.append(dep)
+                    return min(possiable_nsubj, key=lambda x : int(x[1]) - int(x[2]))[2] - 1
+                else:
+                    return None
+            else:
+                return None
+
+        # bfs查找语法关系，查找可能的nsubj关系，或者发现与谓语有关的词是目标词性
+        # 为什么要bfs搜索，例句：据媒体报道，是没有nsubj关系
+        def author_filter_func3(self, token_index):
+            FILTER_NER = ['ORGANIZATION', 'COUNTRY', 'PERSON']
+            path = [str(token_index + 1)]
+
+            seen = []
+
+            while len(path):
+                node = path.pop(0)
+
+                if node in seen or node not in self.dep_parse_dict:
+                    continue
+
+                for dep in self.dep_parse_dict[node]:
+                    if dep[0] == 'nsubj' or self.ner[dep[2] - 1][1] in FILTER_NER:
+                        logger.debug("----------------author bfs search {}".format(dep[2]))
+                        return int(dep[2]) - 1
+                    else:
+                        path.append(str(dep[2]))
+
+                seen.append(node)
+
+            return None
+
+        if upper_layer_func_name == 'token_filter_func2':
+            return [author_filter_func1]
+        else:
+            return [author_filter_func2, author_filter_func1, author_filter_func3]
+
+    # 跟index有关的都返回
+    def get_full_author(self, index):
+        speaker_may_start = index + 1
+        while str(speaker_may_start) in self.dep_parse_dict.keys():
+            index_list = []
+            for dep in self.dep_parse_dict[str(speaker_may_start)]:
+                index_list.append(int(dep[2]))
+
+            if min(index_list) > speaker_may_start:
+                break
+            else:
+                speaker_may_start = min(index_list)
+
+        if speaker_may_start == index + 1:
+            return self.tokens[index]
+        return ''.join(self.tokens[speaker_may_start - 1:index])
+
+    def get_author(self):
+
+        # get token
+        # token_index start from 1, to fit corenlp
+        token_index = 0
+        token_word = None
+        token_filter_name = None
+        for func in self.token_filter():
+            logger.debug('token filter in {}'.format(func.__name__))
+            token_index = func(self)
+            if (token_index >= 0):
+                token_word = self.tokens[token_index]
+                token_filter_name = func.__name__
+                break
+
+        if token_index < 0:
+            logger.error('token not found')
+            return ['no tokens', 0]
+
+        # init dep parse dictory
+        for dep in self.dependency_parse:
+            if str(dep[1]) in self.dep_parse_dict.keys():
+                self.dep_parse_dict[str(dep[1])].append(dep)
+            else:
+                self.dep_parse_dict[str(dep[1])] = [dep]
+        logger.debug('dep_parse_dict: {}'.format(self.dep_parse_dict))
+
+        # get author position
+        author_index = None
+        for func in self.author_filter(token_filter_name):
+            logger.debug('author filter in {}'.format(func.__name__))
+            author_index = func(self, token_index)
+            if author_index != None:
+                break
+        if author_index == None:
+            logger.error('author not found')
+            return ['no speaker', token_index]
+
+        # get full author
+        # 获取author的修饰词
+        full_author = self.get_full_author(author_index)
+        logger.debug("token word:{}, author:{}".format(token_word, full_author))
+
+        return [token_word, full_author]
+
     def get_speaker(self):
         token_index = 0
         for token in self.tokens:
@@ -137,7 +302,7 @@ class NewsParser:
             else:
                 self.dep_parse_dict[str(dep[1])] = [dep]
 
-        logger.debug('dep_parse_dict: {0}'.format(self.dep_parse_dict))
+        logger.debug('dep_parse_dict: {}'.format(self.dep_parse_dict))
 
         # corenlp is 1-index, list is 0-index, transfer
         index = self.tokens.index(token) + 1
@@ -348,7 +513,8 @@ class NewsParser:
                 logger.debug(self.pos)
                 logger.debug(self.ner)
 
-                speaker = self.get_speaker()
+                #  speaker = self.get_speaker()
+                speaker = self.get_author()
                 if speaker[0] == 'no tokens':
                     if stop_index >= len(text):
                         return None
