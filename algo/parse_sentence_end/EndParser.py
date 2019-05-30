@@ -100,6 +100,8 @@ def parse_sentence_end(text):
         begin = text.find(sen_cuts[start_index][start_index_in_text:])
         end = text.find(sen_cuts[end_index - 1]) + len(sen_cuts[end_index - 1]) + 1
         content = text[begin:end]
+        if content and content[0] in ['“','，','。']:
+            content = content[1:]
 
         print('Author: {}, Content: {}'.format(author, content))
         result.append({'author': author, 'content': content})

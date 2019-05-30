@@ -56,7 +56,7 @@ class StanfordNLP:
 
 class NewsParser:
     def __init__(self, path):
-        self.nlp = StanfordNLP()
+        self.nlp = StanfordNLP(host='http://justablog.site')
         self.words = []
         self.full_text = None
         self.text = None
@@ -251,8 +251,12 @@ class NewsParser:
                 continue
 
             for dep in self.dep_parse_dict[node]:
+                print("search dep {}".format(dep))
                 if dep[0] in filter:
-                    index = min(index, dep[2])
+                    if index != token_index:
+                        index = min(index, dep[2])
+                    else:
+                        index = dep[2]
                     logger.debug("find dep at {}".format(index))
                     path.append(str(dep[2]))
 
@@ -262,8 +266,10 @@ class NewsParser:
         index_list = [index]
 
         if str(index) not in self.dep_parse_dict.keys():
+            print("search law 1")
             return index
 
+        
         if 'punct' not in self.to_chunks(self.dep_parse_dict[str(index)]):
             for key, dep in self.dep_parse_dict.items():
                 if index in self.to_chunks(dep):
@@ -271,9 +277,14 @@ class NewsParser:
                         index_list.append(int(key))
 
         for idx in index_list:
+            print("bb {}".format(punct_left))
             for dep in self.dep_parse_dict[str(idx)]:
                 if dep[0] == 'punct':
                     punct_left = min(punct_left, dep[2])
+                    print(" abb {}".format(punct_left))
+
+        print("search law 2 {}".format(punct_left))
+        # punct_left = min(punct_left ,index)
 
         return punct_left
 
@@ -310,83 +321,88 @@ class NewsParser:
 
     def generate(self, text):
 
-        self.full_text = text
-        self.cut_text = text
+        try:
+            self.full_text = text
+            self.cut_text = text
 
-        #  if len(self.preprocessor(text)) > 1:
-            #  self.text = self.preprocessor(text)[0] + '。'
-        #  print(self.preprocessor(text))
-        while True:
-            self.text, stop_index = self.preprocessor(self.cut_text)
-            if stop_index == 0:
-                return None
-
-            print('------{} {}'.format(self.text, stop_index))
-            # speacial law for 说,有时候说不会被切词，比如 张军说
-
-            self.tokens = self.nlp.word_tokenize(self.text)
-            self.dependency_parse = self.nlp.dependency_parse(self.text)
-            self.parse = self.nlp.parse(self.text)
-            self.pos = self.nlp.pos(self.text)
-            self.ner = self.nlp.ner(self.text)
-
-            logger.debug(self.tokens)
-            logger.debug(self.dependency_parse)
-            logger.debug(self.parse)
-            logger.debug(self.pos)
-            logger.debug(self.ner)
-
-            speaker = self.get_speaker()
-            if speaker[0] == 'no tokens':
-                if stop_index >= len(text):
+            #  if len(self.preprocessor(text)) > 1:
+                #  self.text = self.preprocessor(text)[0] + '。'
+            #  print(self.preprocessor(text))
+            while True:
+                self.text, stop_index = self.preprocessor(self.cut_text)
+                if stop_index == 0:
                     return None
+
+                print('------{} {}'.format(self.text, stop_index))
+                # speacial law for 说,有时候说不会被切词，比如 张军说
+
+                self.tokens = self.nlp.word_tokenize(self.text)
+                self.dependency_parse = self.nlp.dependency_parse(self.text)
+                self.parse = self.nlp.parse(self.text)
+                self.pos = self.nlp.pos(self.text)
+                self.ner = self.nlp.ner(self.text)
+
+                logger.debug(self.tokens)
+                logger.debug(self.dependency_parse)
+                logger.debug(self.parse)
+                logger.debug(self.pos)
+                logger.debug(self.ner)
+
+                speaker = self.get_speaker()
+                if speaker[0] == 'no tokens':
+                    if stop_index >= len(text):
+                        return None
+                    else:
+                        self.cut_text = self.cut_text[stop_index:]
+                elif speaker[0] == 'no speaker':
+                    MARKS = ['，', '。', '？', '！', '；']
+                    for i, word in enumerate(self.cut_text[speaker[1]:]):
+                        if word in MARKS:
+                            self.cut_text = self.cut_text[speaker[1] + i + 1:]
+                            break
                 else:
-                    self.cut_text = self.cut_text[stop_index:]
-            elif speaker[0] == 'no speaker':
-                MARKS = ['，', '。', '？', '！', '；']
-                for i, word in enumerate(self.cut_text[speaker[1]:]):
-                    if word in MARKS:
-                        self.cut_text = self.cut_text[speaker[1] + i + 1:]
-                        break
-            else:
-                break
-
-        if speaker[0] == 'no speaker':
-            return None
-
-        self.result['speaker'] = speaker[1]
-        self.result['word_like_say'] = speaker[0]
-        index = self.get_sentence_start(speaker[0])
-        print('----- {}'.format(index))
-        self.result['start_index_in_text'] = sum([len(self.tokens[i]) for i in range(index - 1)]) + stop_index
-        self.result['sub_text_from_start'] = ''.join(t for t in self.tokens[index - 1:])
-        if self.result['sub_text_from_start'].count('“') == 0 \
-            and self.result['sub_text_from_start'].count('”') == 1:
-            for i in range(index):
-                if self.text[i] == '“':
-                    self.result['sub_text_from_start'] = self.text[i:index] + self.result['sub_text_from_start']
                     break
 
-        self.result['tokens'] = self.nlp.word_tokenize(self.full_text)
+            if speaker[0] == 'no speaker':
+                return None
 
-        sen_cut = [sen for sen in re.split("。|？|！", self.full_text) if sen != '']
+            self.result['speaker'] = speaker[1]
+            self.result['word_like_say'] = speaker[0]
+            index = self.get_sentence_start(speaker[0])
+            print('----- {}'.format(index))
+            self.result['start_index_in_text'] = sum([len(self.tokens[i]) for i in range(index - 1)]) + stop_index
+            self.result['sub_text_from_start'] = ''.join(t for t in self.tokens[index - 1:])
+            if self.result['sub_text_from_start'].count('“') == 0 \
+                and self.result['sub_text_from_start'].count('”') == 1:
+                for i in range(index):
+                    if self.text[i] == '“':
+                        self.result['sub_text_from_start'] = self.text[i:index] + self.result['sub_text_from_start']
+                        break
 
-        sub_sen_cut = [sen for sen in re.split("，|。|？|！", self.result['sub_text_from_start']) if sen != '']
+            self.result['tokens'] = self.nlp.word_tokenize(self.full_text)
 
-        self.result['sen_cuts'] = sen_cut
-        self.result['start_index_in_sen_cuts'] = 0
-        for sen in sen_cut:
-            if sub_sen_cut[0] in sen:
-                self.result['start_index_in_sen_cuts'] = sen_cut.index(sen)
-                self.result['start_index_in_text'] = sen.index(sub_sen_cut[0])
-                #  print(sen[self.result['start_index_in_text']:])
-                break
+            sen_cut = [sen for sen in re.split("。|？|！", self.full_text) if sen != '']
 
-        self.clean()
+            print(self.result['sub_text_from_start'])
+            sub_sen_cut = [sen for sen in re.split("，|。|？|！", self.result['sub_text_from_start']) if sen != '']
+            print(sub_sen_cut)
 
-        logger.debug("Parse start result: {}".format(self.result))
+            self.result['sen_cuts'] = sen_cut
+            self.result['start_index_in_sen_cuts'] = 0
+            for sen in sen_cut:
+                if sub_sen_cut[0] in sen:
+                    self.result['start_index_in_sen_cuts'] = sen_cut.index(sen)
+                    self.result['start_index_in_text'] = sen.index(sub_sen_cut[0])
+                    #  print(sen[self.result['start_index_in_text']:])
+                    break
 
-        return self.result
+            self.clean()
+
+            logger.debug("Parse start result: {}".format(self.result))
+
+            return self.result
+        except:
+            return None
 
     def clean(self):
         self.full_text = None
