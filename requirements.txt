@@ -1,4 +1,4 @@
-certifi==2019.3.9
+certifi==2022.12.7
 jieba==0.39
 llvmlite==0.28.0
 mkl-fft==1.0.10
